@@ -13,6 +13,7 @@ import onnxruntime
 from modules.face_restoration import FaceRestoration
 from modules.upscaler import UpscalerData
 from modules.shared import state
+from modules.paths_internal import models_path
 from scripts.logger import logger
 
 import warnings
@@ -86,7 +87,7 @@ def getAnalysisModel():
     global ANALYSIS_MODEL
     if ANALYSIS_MODEL is None:
         ANALYSIS_MODEL = insightface.app.FaceAnalysis(
-            name="buffalo_l", providers=providers # note: allowed_modules=['detection', 'genderage']
+            name="buffalo_l", providers=providers, root=os.path.join(models_path, "insightface") # note: allowed_modules=['detection', 'genderage']
         )
     return ANALYSIS_MODEL
 
@@ -96,7 +97,7 @@ def getFaceSwapModel(model_path: str):
     global CURRENT_FS_MODEL_PATH
     if CURRENT_FS_MODEL_PATH is None or CURRENT_FS_MODEL_PATH != model_path:
         CURRENT_FS_MODEL_PATH = model_path
-        FS_MODEL = insightface.model_zoo.get_model(model_path, providers=providers)
+        FS_MODEL = insightface.model_zoo.get_model(model_path, providers=providers, root=os.path.join(models_path, "insightface"))
 
     return FS_MODEL
 
