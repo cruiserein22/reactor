@@ -308,6 +308,9 @@ def swap_face(
 
             source_face_idx = 0
 
+            logger.info("Analysing destination image.")
+            target_image_analysis = analyse_image(target_img)
+
             for face_num in faces_index:
                 if len(source_faces_index) > 1 and source_face_idx > 0:
 
@@ -322,9 +325,6 @@ def swap_face(
                 source_face_idx += 1
 
                 if source_face is not None and wrong_gender == 0:
-                    logger.info("Analysing destination image.")
-                    target_image_analysis = analyse_image(target_img)
-
                     logger.info("Detecting Target Face, Index = %s", face_num)
                     target_face, wrong_gender, target_age, target_gender = get_face_single(target_img, target_image_analysis, face_index=face_num, gender_target=gender_target)
                     if target_age != "None" or target_gender != "None":
