@@ -88,6 +88,18 @@ with open(req_file) as file:
             print(e)
             print(f"\nERROR: Failed to install {package} - ReActor won't start")
             raise e
+
+    if not is_installed('onnxruntime-gpu', '1.15.1', False) and not is_installed('onnxruntime', '1.15.1', False):
+        import torch.cuda as cuda
+        package = 'onnxruntime-gpu' if cuda.is_available() else 'onnxruntime'
+        try:
+            install_count += 1
+            run_pip(package)
+        except Exception as e:
+            print(e)
+            print(f"\nERROR: Failed to install {package} - ReActor won't start")
+            raise e
+
     if install_count > 0:
         print(f'\n--- PLEASE, RESTART the Server! ---\n')
     else:
