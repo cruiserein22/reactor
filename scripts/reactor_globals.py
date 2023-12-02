@@ -23,6 +23,7 @@ if not os.path.exists(REACTOR_MODELS_PATH):
         os.makedirs(FACE_MODELS_PATH)
 
 def updateDevice():
+    device = "CUDA"
     try:
         LAST_DEVICE_PATH = os.path.join(BASE_PATH, "last_device.txt")
         with open(LAST_DEVICE_PATH) as f:
