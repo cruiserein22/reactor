@@ -51,7 +51,7 @@ class FaceSwapScript(scripts.Script):
             #     clear_faces_list()
             #     return gr.Checkbox.update(value=SAVE_ORIGINAL,visible=True)
             
-            # enable = gr.Checkbox(False, label="Enable", info=f"The Fast and Simple FaceSwap Extension - {version_flag}")
+            enable = gr.Checkbox(False, label="Enable", info=f"The Fast and Simple FaceSwap Extension - {version_flag}")
             gr.Markdown(f"<sup>The Fast and Simple FaceSwap Extension - {version_flag}</sup>")
 
             # TAB MAIN
