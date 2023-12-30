@@ -31,7 +31,7 @@ except: # SD.Next
 from modules.upscaler import UpscalerData
 from modules.shared import state
 from scripts.reactor_logger import logger
-from reactor_modules.reactor_mask import apply_face_mask
+from reactor_modules.reactor_mask import apply_face_mask,apply_face_mask_with_exclusion
 
 try:
     from modules.paths_internal import models_path
@@ -672,7 +672,9 @@ def operate(
                 swapped_image = face_swapper.get(result, target_face, source_face)
                                         
                 if mask_face:
-                    result = apply_face_mask(swapped_image=swapped_image,target_image=result,target_face=target_face,entire_mask_image=entire_mask_image)
+                  
+                    result = apply_face_mask_with_exclusion(swapped_image=swapped_image,target_image=result,target_face=target_face,entire_mask_image=entire_mask_image)
+                    
                 else:
                     result = swapped_image
                 swapped += 1
@@ -709,8 +711,10 @@ def operate(
     
     if enhancement_options is not None and swapped > 0:
         if mask_face and entire_mask_image is not None:
+            logger.status(f"enhance_image_and_mask {mask_face}.")
             result_image = enhance_image_and_mask(result_image, enhancement_options,Image.fromarray(target_img_orig),Image.fromarray(entire_mask_image).convert("L"))    
         else:    
+            logger.status(f"enhance_image {enhancement_options}.")
             result_image = enhance_image(result_image, enhancement_options)
     elif mask_face and entire_mask_image is not None and swapped > 0:
         result_image = Image.composite(result_image,Image.fromarray(target_img_orig),Image.fromarray(entire_mask_image).convert("L"))
