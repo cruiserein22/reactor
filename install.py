@@ -1,154 +1,80 @@
 import subprocess
-import os, sys
-from typing import Any
-import pkg_resources
-from tqdm import tqdm
+import os
+import sys
+from pathlib import Path
 import urllib.request
-from packaging import version as pv
+from tqdm import tqdm
+from packaging import version as packaging_version
+import pkg_resources
 
+# Attempt to import models_path from different modules
 try:
     from modules.paths_internal import models_path
-except:
+    models_path = Path(models_path)  # Ensure models_path is a Path object
+except ImportError:
     try:
         from modules.paths import models_path
-    except:
-        model_path = os.path.abspath("models")
+        models_path = Path(models_path)  # Ensure models_path is a Path object
+    except ImportError:
+        models_path = Path.cwd() / "models"
 
-
-BASE_PATH = os.path.dirname(os.path.realpath(__file__))
-
-req_file = os.path.join(BASE_PATH, "requirements.txt")
-
-models_dir = os.path.join(models_path, "insightface")
-
-# DEPRECATED:
-# models_dir_old = os.path.join(models_path, "roop")
-# if os.path.exists(models_dir_old):
-#     if not os.listdir(models_dir_old) and (not os.listdir(models_dir) or not os.path.exists(models_dir)):
-#         os.rename(models_dir_old, models_dir)
-#     else:
-#         import shutil
-#         for file in os.listdir(models_dir_old):
-#             shutil.move(os.path.join(models_dir_old, file), os.path.join(models_dir, file))
-#         try:
-#             os.rmdir(models_dir_old)
-#         except Exception as e:
-#             print(f"OSError: {e}")
-            
+BASE_PATH = Path(__file__).parent
+req_file = BASE_PATH / "requirements.txt"
+models_dir = models_path / "insightface"
 model_url = "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/inswapper_128.onnx"
-model_name = os.path.basename(model_url)
-model_path = os.path.join(models_dir, model_name)
+model_name = model_url.split('/')[-1]
+model_path = models_dir / model_name
 
-def pip_install(*args):
-    subprocess.run([sys.executable, "-m", "pip", "install", *args])
+def run_command(*args):
+    """Executes a given command using subprocess."""
+    subprocess.run(args, check=True)
 
-def pip_uninstall(*args):
-    subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", *args])
+def pip_install(package: str):
+    run_command(sys.executable, "-m", "pip", "install", "-U", package)
 
-def is_installed (
-        package: str, version: str | None = None, strict: bool = True
-):
-    has_package = None
+def pip_uninstall(package: str):
+    run_command(sys.executable, "-m", "pip", "uninstall", "-y", package)
+
+def is_installed(package: str, min_version: str = None) -> bool:
+    """Checks if a package is installed, optionally verifying the minimum version."""
     try:
-        has_package = pkg_resources.get_distribution(package)
-        if has_package is not None:
-            installed_version = has_package.version
-            if (installed_version != version and strict == True) or (pv.parse(installed_version) < pv.parse(version) and strict == False):
-                return False
-            else:
-                return True
-        else:
-            return False
-    except Exception as e:
-        print(f"Error: {e}")
+        installed_version = packaging_version.parse(pkg_resources.get_distribution(package).version)
+        if min_version:
+            return installed_version >= packaging_version.parse(min_version)
+        return True
+    except pkg_resources.DistributionNotFound:
         return False
-    
+
 def download(url, path):
+    """Downloads a file from a specified URL to a given path."""
     request = urllib.request.urlopen(url)
     total = int(request.headers.get('Content-Length', 0))
     with tqdm(total=total, desc='Downloading...', unit='B', unit_scale=True, unit_divisor=1024) as progress:
         urllib.request.urlretrieve(url, path, reporthook=lambda count, block_size, total_size: progress.update(block_size))
 
-if not os.path.exists(models_dir):
-    os.makedirs(models_dir)
+# Ensure models directory exists
+models_dir.mkdir(parents=True, exist_ok=True)
 
-if not os.path.exists(model_path):
-    download(model_url, model_path)
+# Download model if it doesn't exist
+if not model_path.exists():
+    download(model_url, str(model_path))
 
-# print("ReActor preheating...", end=' ')
-
-last_device = None
-first_run = False
-available_devices = ["CPU", "CUDA"]
-
-try:
-    last_device_log = os.path.join(BASE_PATH, "last_device.txt")
-    with open(last_device_log) as f:
-        last_device = f.readline().strip()
-    if last_device not in available_devices:
-        last_device = None
-except:
-    last_device = "CPU"
-    first_run = True
-    with open(os.path.join(BASE_PATH, "last_device.txt"), "w") as txt:
-        txt.write(last_device)
-
-with open(req_file) as file:
-    install_count = 0
-    ort = "onnxruntime-gpu"
+# Determine the appropriate ONNX Runtime (ORT) version and install it
+def install_ort():
     import torch
-    cuda_version = None
-    try:
-        if torch.cuda.is_available():
-            cuda_version = torch.version.cuda
-            print(f"CUDA {cuda_version}")
-            if first_run or last_device is None:
-                last_device = "CUDA"
-        elif torch.backends.mps.is_available() or hasattr(torch,'dml') or hasattr(torch,'privateuseone'):
-            ort = "onnxruntime"
-            # to prevent errors when ORT-GPU is installed but we want ORT instead:
-            if first_run:
-                pip_uninstall("onnxruntime", "onnxruntime-gpu")
-            # just in case:
-            if last_device == "CUDA" or last_device is None:
-                last_device = "CPU"
-        else:
-            if last_device == "CUDA" or last_device is None:
-                last_device = "CPU"
-        with open(os.path.join(BASE_PATH, "last_device.txt"), "w") as txt:
-            txt.write(last_device)
-        if cuda_version is not None and float(cuda_version)>=12: # CU12
-            if not is_installed(ort,"1.17.0",False):
-                install_count += 1
-                pip_install(ort,"--extra-index-url", "https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/")
-        elif not is_installed(ort,"1.16.1",False):
-            install_count += 1
-            pip_install(ort, "-U")
-    except Exception as e:
-        print(e)
-        print(f"\nERROR: Failed to install {ort} - ReActor won't start")
-        raise e
-    # print(f"Device: {last_device}")
-    strict = True
-    for package in file:
-        package_version = None
-        try:
+    ort = "onnxruntime-gpu" if torch.cuda.is_available() else "onnxruntime"
+    min_version = "1.17.0" if torch.cuda.is_available() and float(torch.version.cuda) >= 12 else "1.16.1"
+    if not is_installed(ort, min_version):
+        pip_install(f"{ort}=={min_version}")
+
+# Install requirements from the requirements file
+def install_requirements():
+    with open(req_file) as file:
+        for package in file:
             package = package.strip()
-            if "==" in package:
-                package_version = package.split('==')[1]
-            elif ">=" in package:
-                package_version = package.split('>=')[1]
-                strict = False
-            if not is_installed(package,package_version,strict):
-                install_count += 1
-                pip_install(package)
-        except Exception as e:
-            print(e)
-            print(f"\nERROR: Failed to install {package} - ReActor won't start")
-            raise e
-    if install_count > 0:
-        print(f"""
-        +---------------------------------+
-        --- PLEASE, RESTART the Server! ---
-        +---------------------------------+
-        """)
+            pip_install(package)
+
+if __name__ == "__main__":
+    install_ort()
+    install_requirements()
+    print("Installation complete. Please, restart the server if necessary.")
