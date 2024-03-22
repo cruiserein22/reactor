@@ -1,5 +1,5 @@
 import gradio as gr
-from scripts.reactor_swapper import build_face_model, blend_faces
+from reactor_modules.reactor_swapper import build_face_model, blend_faces
 
 # TAB TOOLS
 def show():

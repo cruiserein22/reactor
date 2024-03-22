@@ -1,5 +1,5 @@
 import gradio as gr
-from scripts.reactor_swapper import (
+from reactor_modules.reactor_swapper import (
     clear_faces,
     clear_faces_list,
     clear_faces_target,

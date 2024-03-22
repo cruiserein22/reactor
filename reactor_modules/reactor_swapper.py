@@ -2,6 +2,9 @@ import copy
 import os
 from dataclasses import dataclass
 from typing import List, Union
+from threading import Thread
+import time
+from modules import script_callbacks
 
 import cv2
 import numpy as np
@@ -139,12 +142,21 @@ def clear_faces_all():
     SOURCE_IMAGE_LIST_HASH = []
     logger.status("All Images Hash has been reset")
 
-def getAnalysisModel():
+def preloadAnalysisModel():
     global ANALYSIS_MODEL
+    logger.status('analysis model preloading started')
     if ANALYSIS_MODEL is None:
         ANALYSIS_MODEL = insightface.app.FaceAnalysis(
             name="buffalo_l", providers=PROVIDERS, root=os.path.join(models_path, "insightface") # note: allowed_modules=['detection', 'genderage']
         )
+    logger.status('analysis model preloading finished')
+
+script_callbacks.on_app_started(lambda demo, app: Thread(target=preloadAnalysisModel).start())
+
+def getAnalysisModel():
+    global ANALYSIS_MODEL
+    while ANALYSIS_MODEL is None:
+        time.sleep(0.2)
     return ANALYSIS_MODEL
 
 

@@ -20,7 +20,7 @@ from modules.api import api
 
 import gradio as gr
 
-from scripts.reactor_swapper import EnhancementOptions, swap_face, DetectionOptions
+from reactor_modules.reactor_swapper import EnhancementOptions, swap_face, DetectionOptions
 from scripts.reactor_logger import logger
 from scripts.reactor_helpers import get_facemodels
 

@@ -23,7 +23,7 @@ from reactor_ui import (
     ui_detection,
 )
 from scripts.reactor_logger import logger
-from scripts.reactor_swapper import (
+from reactor_modules.reactor_swapper import (
     EnhancementOptions,
     DetectionOptions,
     swap_face,

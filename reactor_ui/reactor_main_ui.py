@@ -3,7 +3,7 @@ from scripts.reactor_helpers import (
     get_model_names, 
     get_facemodels
 )
-from scripts.reactor_swapper import (
+from reactor_modules.reactor_swapper import (
     clear_faces_list,
 )
 from modules import shared
