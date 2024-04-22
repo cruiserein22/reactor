@@ -81,6 +81,6 @@ def add_axis_options(xyz_grid):
     xyz_grid.axis_options.extend(extra_axis_options)
 
 def run():
-    xyz_grid = find_module("xyz_grid.py, xy_grid.py")
+    xyz_grid = find_module("scripts.xyz_grid, xyz_grid.py, xy_grid.py")
     if xyz_grid:
         add_axis_options(xyz_grid)
