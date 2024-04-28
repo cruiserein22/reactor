@@ -661,13 +661,19 @@ def build_face_model(image: Image.Image, name: str, save_model: bool = True, det
         logger.error(no_face_msg)
         return no_face_msg
 
-def blend_faces(images_list: List, name: str, compute_method: int = 0, shape_check: bool = False):
+def blend_faces(images_list: List, name: str, compute_method: int = 0, shape_check: bool = False, is_api: bool = False):
     faces = []
     embeddings = []
     images: List[Image.Image] = []
-    images, images_names = get_images_from_list(images_list)
+    if not is_api:
+        images, images_names = get_images_from_list(images_list)
+    else: 
+        images = images_list
     for i,image in enumerate(images):
-        logger.status(f"Building Face Model for {images_names[i]}...")
+        if not is_api:
+            logger.status(f"Building Face Model for {images_names[i]}...")
+        else:
+            logger.status(f"Building Face Model for Image {i+1}...")
         face = build_face_model(image,str(i),save_model=False)
         if isinstance(face, str):
             # logger.error(f"No faces found in {images_names[i]}, skipping")
@@ -676,7 +682,10 @@ def blend_faces(images_list: List, name: str, compute_method: int = 0, shape_che
             if i == 0:
                 embedding_shape = face.embedding.shape
             elif face.embedding.shape != embedding_shape:
-                logger.error(f"Embedding Shape Mismatch for {images_names[i]}, skipping")
+                if not is_api:
+                    logger.error(f"Embedding Shape Mismatch for {images_names[i]}, skipping")
+                else:
+                    logger.error(f"Embedding Shape Mismatch for Image {i+1}, skipping")
                 continue
         faces.append(face)
         embeddings.append(face.embedding)
