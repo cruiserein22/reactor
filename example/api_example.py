@@ -17,7 +17,7 @@ finally:
     print(im)
 
 img_bytes = io.BytesIO()
-im.save(img_bytes, format='PNG') 
+im.save(img_bytes, format='PNG')
 img_base64 = base64.b64encode(img_bytes.getvalue()).decode('utf-8')
 
 # ReActor arguments:
@@ -47,6 +47,11 @@ args=[
     1, #22 Select Source, 0 - Image, 1 - Face Model, 2 - Source Folder
     "elena.safetensors", #23 Filename of the face model (from "models/reactor/faces"), e.g. elena.safetensors, don't forger to set #22 to 1
     "C:\PATH_TO_FACES_IMAGES", #24 The path to the folder containing source faces images, don't forger to set #22 to 2
+    None, #25 skip it for API
+    True, #26 Randomly select an image from the path
+    True, #27 Force Upscale even if no face found
+    0.6, #28 Face Detection Threshold
+    2, #29 Maximum number of faces to detect (0 is unlimited)
 ]
 
 # The args for ReActor can be found by 

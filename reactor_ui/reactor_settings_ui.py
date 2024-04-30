@@ -23,7 +23,7 @@ def show(hash_check_block: bool = True):
                 choices=DEVICE_LIST,
                 value=DEVICE,
                 type="value",
-                info="If you already run 'Generate' - RESTART is required to apply. Click 'Save', (A1111) Extensions Tab -> 'Apply and restart UI' or (SD.Next) close the Server and start it again",
+                info="Click 'Save' to apply. If you already run 'Generate' - RESTART is required: (A1111) Extensions Tab -> 'Apply and restart UI' or (SD.Next) close the Server and start it again",
                 scale=2,
             )
             save_device_btn = gr.Button("Save", scale=0)
