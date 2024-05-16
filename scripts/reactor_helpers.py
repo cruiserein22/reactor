@@ -203,9 +203,12 @@ def get_facemodels():
 
 def get_model_names(get_models):
     models = get_models()
-    names = ["None"]
+    names = []
     for x in models:
         names.append(os.path.basename(x))
+    # Sort ignoring case during sort but retain in output
+    names.sort(key=str.lower)
+    names.insert(0, "None")
     return names
 
 def get_images_from_folder(path: str):
